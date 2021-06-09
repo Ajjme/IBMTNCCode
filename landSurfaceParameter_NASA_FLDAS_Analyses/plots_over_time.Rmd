@@ -1,0 +1,189 @@
+---
+title: "GES DISC data"
+author: "Clara Hu -- 204901533"
+date: "4/1/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## load ggplot
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(tidyverse)
+library(lubridate)
+library(hrbrthemes)
+```
+
+nc files from https://disc.gsfc.nasa.gov/datasets/FLDAS_NOAH01_C_GL_M_001/summary?keywords=FLDAS and in Box
+
+## Load in CSV
+
+```{r}
+ges_disc_df <- read.csv("ges_disc_df.csv")
+ges_disc_df$Date <- as.Date(ges_disc_df$Date, format = "%m/%d/%Y")
+plot(ges_disc_df$Date[1:12], ges_disc_df$total.evapotranspiration..kg.m.2.s.1.[1:12], type = "l",
+     main = "1982 Total Evapotranspiration", ylab = "Evapotranspiration (kg m-2 s-1)", xlab = "Month in 1982")
+plot(ges_disc_df$Date[ges_disc_df$Year == 1995], ges_disc_df$total.evapotranspiration..kg.m.2.s.1.[ges_disc_df$Year == 1995], type = "l", main = "1995 Total Evapotranspiration", ylab = "Evapotranspiration(kg m-2 s-1)", xlab = "Month in 1995")
+plot(ges_disc_df$Date[ges_disc_df$Year == 2005], ges_disc_df$total.evapotranspiration..kg.m.2.s.1.[ges_disc_df$Year == 2005], type = "l", main = "2005 Total Evapotranspiration", ylab = "Evapotranspiration (kg m-2 s-1)", xlab = "Month in 2005", ylim = c(0.00001, 0.000055))
+plot(ges_disc_df$Date[457:468], ges_disc_df$total.evapotranspiration..kg.m.2.s.1.[457:468], type = "l",
+     main = "2020 Total Evapotranspiration", ylab = "Evapotranspiration (kg m-2 s-1)", xlab = "Month in 2020", ylim = c(0.00001, 0.000055))
+plot(ges_disc_df$Date[ges_disc_df$Year > 2000 & ges_disc_df$Year <= 2010], ges_disc_df$total.evapotranspiration..kg.m.2.s.1.[ges_disc_df$Year > 2000 & ges_disc_df$Year <= 2010], type = "l", ylim = c(0, 0.00008),
+     main = "Evapotranspiration (2001 - 2010)", ylab = "Evapotranspiration (kg m-2 s-1)", xlab = "Year")
+abline(lm(ges_disc_df$total.evapotranspiration..kg.m.2.s.1.[ges_disc_df$Year > 2000 & ges_disc_df$Year <= 2010]~ ges_disc_df$Date[ges_disc_df$Year > 2000 & ges_disc_df$Year <= 2010]))
+```
+
+```{r}
+plot(ges_disc_df$Date[1:12], ges_disc_df$soil.moisture.content.0...10.cm.underground..m.3.m.3.[1:12], type = "l",
+     main = "1982 Soil Moisture", ylab = "Soil Moisture (m^3 m-3)", xlab = "Month in 1982")
+plot(ges_disc_df$Date[49:60], ges_disc_df$soil.moisture.content.0...10.cm.underground..m.3.m.3.[49:60], type = "l",
+     main = "1986 Soil Moisture", ylab = "Soil Moisture (m^3 m-3)", xlab = "Month in 1986")
+plot(ges_disc_df$Date[445:456], ges_disc_df$soil.moisture.content.0...10.cm.underground..m.3.m.3.[445:456],
+     type = "l",main = "2019 Soil Moisture", ylab = "Soil Moisture (m^3 m-3)", xlab = "Month in 2019")
+plot(ges_disc_df$Date[457:468], ges_disc_df$soil.moisture.content.0...10.cm.underground..m.3.m.3.[457:468],
+     type = "l", main = "2020 Soil Moisture", ylab = "Soil Moisture (m^3 m-3)", xlab = "Month in 2020")
+plot(ges_disc_df$Date, ges_disc_df$soil.moisture.content.0...10.cm.underground..m.3.m.3., type = "l",
+     main = "Soil Moisture (1982 - 2021)", ylab = "Soil Moisture (m^3 m-3)", xlab = "Year", ylim = c(0, 0.5))
+abline(lm(ges_disc_df$soil.moisture.content.0...10.cm.underground..m.3.m.3.~ ges_disc_df$Date))
+```
+
+```{r}
+janmar_avg_smc0010 <- mean(ges_disc_df$soil.moisture.content.0...10.cm.underground..m.3.m.3.[ges_disc_df$Month <=3 & ges_disc_df$Year<=2000])
+janmar <- filter(ges_disc_df, Month <= 3) 
+janmar_group <- group_by(janmar, Year)
+janmar_group_avg <- summarise(janmar_group, avg_smc = mean(soil.moisture.content.0...10.cm.underground..m.3.m.3.))
+ungroup(janmar_group)
+janmar_group_avg[, 3] <- janmar_group_avg$avg_smc - janmar_avg_smc0010
+plot(janmar_group_avg$Year, janmar_group_avg$avg_smc, type = "l")
+abline(lm(janmar_group_avg$avg_smc~janmar_group_avg$Year))
+abline(h = janmar_avg_smc0010)
+summary(lm(janmar_group_avg$avg_smc~janmar_group_avg$Year))
+```
+
+#Set up weather/precipitation data
+
+```{r}
+weather_1520<- read.csv("Weatherchannelreleventdata1520.csv") #data from the weather channel
+dat_1520 <- as.Date(weather_1520$ï..observationTimeUtcIso)
+year_1520 <- year(dat_1520)
+month_1520 <- month(dat_1520)
+weather_1520[, 11] <- year_1520
+weather_1520[, 12] <- month_1520
+names(weather_1520)[11] <- "Year"
+names(weather_1520)[12] <- "Month"
+weather_group <- group_by(weather_1520, Year, Month)
+weather_group_avg <- summarise(weather_group, precipitation = mean(precipitationRate), temp = mean(temperature))
+ungroup(weather_group)
+weather_group_avg[5] <- as.Date(c(paste(rep(2015:2019, each = 12), "-", 1:12, "-", "01", sep = ""), "2020-01-01"))
+names(weather_group_avg)[5] <- "Date"
+write.csv(weather_group_avg, "weatherdata_1520.csv")
+plot(weather_group_avg$Date, weather_group_avg$precipitation)
+```
+
+```{r}
+smc0010_1520 <- ges_disc_df$soil.moisture.content.0...10.cm.underground..m.3.m.3.[397:457]
+evap_1520 <- ges_disc_df$total.evapotranspiration..kg.m.2.s.1.[397:457]
+
+plot(evap_1520 ~ weather_group_avg$precipitation, main = "Evapotranspiration vs Precipitation Rate (2015 - 2020)", ylab = "Evapotranspiration", xlab = "Precipitation Rate")
+abline(lm(evap_1520 ~ weather_group_avg$precipitation))
+summary(lm(evap_1520 ~ (weather_group_avg$precipitation)))
+
+plot(evap_1520 ~ weather_group_avg$temp, main = "Evapotranspiration vs Temperature (2015 - 2020)", ylab = "Evapotranspiration", xlab = "Temperature")
+abline(lm(evap_1520 ~ weather_group_avg$temp))
+summary(lm(evap_1520 ~ weather_group_avg$precipitation))
+
+
+plot(smc0010_1520 ~ weather_group_avg$precipitation, main = "Soil Moisture vs Precipitation Rate (2015 - 2020)", ylab = "Soil Moisture", xlab = "Precipitation Rate")
+abline(lm(smc0010_1520 ~ weather_group_avg$precipitation))
+plot(lm(smc0010_1520 ~ (weather_group_avg$precipitation)))
+summary(lm(smc0010_1520 ~ weather_group_avg$precipitation))
+```
+
+```{r}
+plot(weather_group_avg$precipitation ~ weather_group_avg$Date,type = "l", xlab = "date", ylab = "precipitation")
+plot(smc0010_1520 ~ weather_group_avg$Date, type = "l",  xlab = "date", ylab = "soil moisture")
+plot(weather_group_avg$temp ~ weather_group_avg$Date, type = "l")
+
+
+
+data <- data.frame(date = weather_group_avg$Date,
+                   precipitation = weather_group_avg$precipitation,
+                   temperature = weather_group_avg$temp,
+                   soilmoisture = smc0010_1520)
+
+colors <- c("soil moisture" = "orange3","precipitation" = "blue3" )
+ggplot(data, aes(x=date)) +
+        geom_line(aes(y = soilmoisture, color = "soil moisture"), size = 1.05) +
+        geom_line(aes(y = precipitation, color = "precipitation"), size = 1.05) +
+        scale_y_continuous(
+                name = "Precipitation Rate (mm/h)",
+                sec.axis = sec_axis(~.*1, name = "Soil Moisture (m3 m-3)")
+        ) +
+        labs(color = "Legend") +
+        scale_color_manual(values = colors) +
+        ggtitle("Precipitation and Soil Moisture (2015 -2020)") +
+        theme_ipsum()
+        
+```
+
+```{r}
+boxplot(ges_disc_df$surface.runoff..kg.m.2.s.1.)
+summary(ges_disc_df$surface.runoff..kg.m.2.s.1.)
+abline(lm(ges_disc_df$surface.runoff..kg.m.2.s.1.~ ges_disc_df$Date))
+
+try_surfrundf <- data.frame(Year = ges_disc_df$Year, Month = ges_disc_df$Month, surfrun = ges_disc_df$surface.runoff..kg.m.2.s.1.)
+
+library(tidyverse)
+surfrun_trygroup <- group_by(try_surfrundf, Year)
+surfruntry2 <- summarise(surfrun_trygroup, runoff = mean(surfrun))
+ungroup(surfrun_trygroup)
+
+plot((runoff*86400)~Year, data = surfruntry2, type = "p", main = "Surface Runoff (1982 - 2020)", xlab = "Year", ylab = "Surface Runoff (mm/day)")
+abline(lm((runoff*86400)~Year, data = surfruntry2))
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

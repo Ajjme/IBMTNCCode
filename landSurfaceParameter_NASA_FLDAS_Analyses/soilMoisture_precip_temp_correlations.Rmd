@@ -1,0 +1,68 @@
+---
+title: "Correlations"
+author: "Clara Hu -- 204901533"
+date: "5/10/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(tidyverse)
+library(lubridate)
+library(hrbrthemes)
+```
+
+## load in ges_disc_df
+
+```{r}
+ges_disc_df <- read.csv("ges_disc_df.csv")
+ges_disc_df$Date <- as.Date(ges_disc_df$Date, format = "%m/%d/%Y")
+```
+
+## SMC & Precip
+
+```{r}
+smc_precip_m <- lm(ges_disc_df$soil.moisture.content.0...10.cm.underground..m.3.m.3. ~ ges_disc_df$rainfall.flux..kg.m.2.s.1.)
+summary(smc_precip_m)
+plot(smc_precip_m)
+plot(ges_disc_df$soil.moisture.content.0...10.cm.underground..m.3.m.3. ~ ges_disc_df$rainfall.flux..kg.m.2.s.1.)
+abline(smc_precip_m)
+```
+
+## SMC, Temp, and Precipitation
+
+```{r}
+smc_temp_m <- lm(ges_disc_df$soil.moisture.content.0...10.cm.underground..m.3.m.3. ~ ges_disc_df$surface.air.temperature..K.)
+smc_temp_m1 <- lm(ges_disc_df$soil.moisture.content.0...10.cm.underground..m.3.m.3. ~ ges_disc_df$rainfall.flux..kg.m.2.s.1.+ges_disc_df$surface.air.temperature..K.)
+smc_temp_m2 <- lm(ges_disc_df$soil.moisture.content.0...10.cm.underground..m.3.m.3. ~ ges_disc_df$rainfall.flux..kg.m.2.s.1.:ges_disc_df$surface.air.temperature..K. + ges_disc_df$rainfall.flux..kg.m.2.s.1.)
+smc_temp_m3 <- lm(ges_disc_df$soil.moisture.content.0...10.cm.underground..m.3.m.3. ~ ges_disc_df$rainfall.flux..kg.m.2.s.1.:ges_disc_df$surface.air.temperature..K. + ges_disc_df$rainfall.flux..kg.m.2.s.1. + ges_disc_df$surface.air.temperature..K.)
+summary(smc_temp_m2)
+plot(smc_temp_m2)
+vif(smc_temp_m2)
+AIC(smc_temp_m2)
+BIC(smc_temp_m2)
+interaction.plot(ges_disc_df$rainfall.flux..kg.m.2.s.1., ges_disc_df$surface.air.temperature..K., ges_disc_df$soil.moisture.content.0...10.cm.underground..m.3.m.3.)
+
+plot(ges_disc_df$soil.moisture.content.0...10.cm.underground..m.3.m.3. ~ ges_disc_df$rainfall.flux..kg.m.2.s.1.:ges_disc_df$surface.air.temperature..K. + ges_disc_df$rainfall.flux..kg.m.2.s.1.)
+
+
+mean(ges_disc_df$soil.moisture.content.0...10.cm.underground..m.3.m.3.)
+
+plot(ges_disc_df$soil.moisture.content.0...10.cm.underground..m.3.m.3. ~ ges_disc_df$surface.air.temperature..K.)
+
+```
+
+
+
+
+
+
+
+
+
+

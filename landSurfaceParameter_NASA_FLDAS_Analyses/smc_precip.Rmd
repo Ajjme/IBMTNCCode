@@ -1,0 +1,83 @@
+---
+title: "Soil Moisture and Precipitation"
+author: "Clara Hu"
+date: "4/19/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Load Packages
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(tidyverse)
+library(lubridate)
+library(hrbrthemes)
+```
+
+## Read in Data
+
+```{r}
+ges_disc_df <- read.csv("ges_disc_df.csv") # NASA data with specified lat/lon
+ges_disc_df$Date <- as.Date(ges_disc_df$Date, format = "%m/%d/%Y")
+smc0010_1520 <- ges_disc_df$soil.moisture.content.0...10.cm.underground..m.3.m.3.[397:457] #soil moisture data 0-10cm for 2015-2020
+
+weather_avg <- read.csv("monthavg_weather1520.csv") #precipitation data (with monthly averages)
+weather_avg$Date <- as.Date(weather_avg$Date, format = "%m/%d/%Y")
+```
+
+## Plot time series
+
+```{r}
+plot(weather_avg$precipitation ~ weather_avg$Date,type = "l", main = "Precipitation Rate", xlab = "date", ylab = "precipitation (mm/hr)")
+plot(smc0010_1520 ~ weather_avg$Date, type = "l", main = "Soil Moisture", xlab = "date", ylab = "soil moisture(m3 m-3)")
+```
+
+## Plot Soil Moisture over Precipitation
+
+```{r}
+data <- data.frame(date = weather_avg$Date,
+                   precipitation = weather_avg$precipitation,
+                   soilmoisture = smc0010_1520) # data frame with data used for plot
+
+colors <- c("soil moisture" = "orange3","precipitation" = "blue3" )
+ggplot(data, aes(x=date)) +
+        geom_line(aes(y = soilmoisture, color = "soil moisture"), size = 1.05) +
+        geom_line(aes(y = precipitation, color = "precipitation"), size = 1.05) +
+        scale_y_continuous(
+                name = "Precipitation Rate (mm/h)",
+                sec.axis = sec_axis(~.*1, name = "Soil Moisture (m3 m-3)")
+        ) +
+        labs(color = "Legend") +
+        scale_color_manual(values = colors) +
+        ggtitle("Precipitation and Soil Moisture (2015 -2020)") +
+        theme_ipsum()
+```
+
+Can see the dry and wet (long & short) seasons
+Follows pattern
+2017 drought
+
+
+## Plot soil moisture vs precipitation
+
+```{r}
+model <- lm(smc0010_1520 ~ weather_avg$precipitationRate)
+cor(weather_avg$precipitationRate, smc0010_1520)
+summary(lm(smc0010_1520 ~ (weather_avg$precipitation)))
+plot(lm(smc0010_1520 ~ (weather_avg$precipitation)))
+
+plot(smc0010_1520 ~ weather_avg$precipitation, main = "Soil Moisture vs Precipitation Rate (2015 - 2020)", ylab = "Soil Moisture (m3 m-3)", xlab = "Precipitation Rate (mm hr-1)")
+abline(lm(smc0010_1520 ~ weather_avg$precipitation))
+```
+
+Checked for 
+Moderate positive correlation between soil moisture and precipitation
+r-squared = 0.3725
+
+
+
