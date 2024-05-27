@@ -1,0 +1,418 @@
+---
+title: "date_MT"
+output: html_document
+---
+
+```{r }
+library(readr) 
+library(dplyr) 
+library(tidyr) 
+library(lubridate) 
+library(tibble)
+library(ggplot2)
+library(gridExtra)
+library(ggthemes)
+library(gridExtra)
+```
+# All date M - water level
+```{r}
+#load file and clean data
+mbo <- read_csv("M_WL.csv")
+RawData <- mbo[1:3]
+
+#separate day, month, year into different columns 
+Date_date <- RawData 
+
+Date_date$Date <- as.Date(Date_date$`Date Time, GMT+03:00`,format="%m/%d/%y") 
+
+Final_data <- Date_date %>%
+  mutate(date=format(Date, "%d"),month = format(Date, "%m%"), year = format(Date, "%Y"),Date_md=format(Date,"%m/%d"))
+
+#daily average in March, April, May
+Conclusion1 <- Final_data %>%
+  group_by(Date) %>%
+  summarise(Average_by_day_and_year = mean(as.numeric(as.character(`Water Level (m)`))))
+Conclusion1M <- Conclusion1%>%
+  mutate(watershed="Mbogiti(T)")
+
+#write.csv(Conclusion1K,"KW5.csv", row.names = FALSE)
+```
+
+#heatmap
+```{r}
+Conclusion1M <- Conclusion1M %>%
+  mutate(as.POSIXct(strptime(Conclusion1M$Date, "%Y-%m-%d")))
+
+names(Conclusion1M)[2] <- 'waterLevel'
+names(Conclusion1M)[4] <- 'DDate'
+
+hdata <- Conclusion1M %>% mutate(
+  week = isoweek(Conclusion1M$DDate),
+  wday = wday(Conclusion1M$DDate)-1,
+  year = year(Conclusion1M$DDate))
+
+m1 <- ggplot(hdata, aes(week, wday, fill = waterLevel)) +
+  geom_tile(color = "white") +
+  facet_wrap(~ year, ncol = 1) +
+  scale_fill_gradientn(colours = c("#F0EFF0", "#AAB6FB","#6096FD","#031B88")) +
+  scale_x_continuous(name = "Week of the Year", breaks = 1:52, labels = 1:52) +
+  labs(subtitle = "Change in Water Level (m) in Mbogiti(T)", y = "Day of week") +
+  theme(axis.text = element_text(size = 5), axis.title = element_text(size = 8, face = "bold"))
+m1
+```
+
+```{r}
+pm1 <- ggplotly(
+  p = m1,
+  width = NULL,
+  height = NULL,
+  tooltip = "all",
+  dynamicTicks = FALSE,
+  layerData = 1,
+  originalData = TRUE,
+  source = "A",
+)
+pm1
+```
+
+# All date T - water level
+```{r}
+#load file and clean data
+thika <- read_csv("T_WL.csv")
+RawData <- thika[1:3]
+
+#separate day, month, year into different columns 
+Date_date <- RawData 
+
+Date_date$Date <- as.Date(Date_date$`Date Time, GMT+03:00`,format="%m/%d/%y") 
+
+Final_data <- Date_date %>%
+  mutate(date=format(Date, "%d"),month = format(Date, "%m"), year = format(Date, "%Y"),Date_md=format(Date,"%m/%d"))
+
+#daily average in March, April, May
+Conclusion1 <- Final_data %>%
+  group_by(Date) %>%
+  summarise(Average_by_day_and_year = mean(as.numeric(as.character(`Water Level (m)`))))
+Conclusion1T <- Conclusion1%>%
+  mutate(watershed="Thika-Valley(C)")
+#write.csv(Conclusion1G,"GW5.csv", row.names = FALSE)
+```
+
+#heatmap
+```{r}
+Conclusion1T <- Conclusion1T %>%
+  mutate(as.POSIXct(strptime(Conclusion1T$Date, "%Y-%m-%d")))
+
+names(Conclusion1T)[2] <- 'waterLevel'
+names(Conclusion1T)[4] <- 'DDate'
+
+hdata <- Conclusion1T %>% mutate(
+  week = isoweek(Conclusion1T$DDate),
+  wday = wday(Conclusion1T$DDate)-1,
+  year = year(Conclusion1T$DDate))
+
+t1 <- ggplot(hdata, aes(week, wday, fill = waterLevel)) +
+  geom_tile(color = "white") +
+  facet_wrap(~ year, ncol = 1) +
+  scale_fill_gradientn(colours = c("#F0EFF0", "#AAB6FB","#6096FD","#031B88")) +
+  scale_x_continuous(name = "Week of the Year", breaks = 1:52, labels = 1:52) +
+  labs(subtitle = "Change in Water Level (m) in Thika-Valley", y = "Day of week") +
+  theme(axis.text = element_text(size = 5), axis.title = element_text(size = 8, face = "bold"))
+t1
+```
+
+```{r}
+pt1 <- ggplotly(
+  p = t1,
+  width = NULL,
+  height = NULL,
+  tooltip = "all",
+  dynamicTicks = FALSE,
+  layerData = 1,
+  originalData = TRUE,
+  source = "A",
+)
+pt1
+```
+
+```{r}
+Conclusion_final=rbind(Conclusion1T,Conclusion1K)
+```
+```{r}
+p <- ggplot(data=Conclusion_final,aes(x=Date,y=Average_by_day_and_year,color=watershed))+
+  geom_line()+
+  labs(title="Water level change in Mbogiti and Thika-Valley",
+       caption="Source:IBM") +
+  #scale_x_date(date_breaks= "1 year",date_labels="%Y/%m/%d")+
+  #theme(axis.text = element_text(size=8,angle=90))+
+  ylab("Average Water Level(m)")+
+  xlab("Date")
+p
+```
+
+```{r}
+#write.csv(Conclusion_final,"KGW5.csv", row.names = FALSE)
+```
+
+# All date M - TSS
+```{r}
+#load file and clean data
+mbo <- read_csv("M-TT.csv")
+
+#separate day, month, year into different columns 
+Date_date <- mbo
+
+Date_date$Date <- as.Date(Date_date$`Date sampled`,format="%m/%d/%y") #%Y/%m/%d
+
+Final_data <- Date_date %>%
+  mutate(date=format(Date, "%d"),month = format(Date, "%m"), year = format(Date, "%Y"),Date_md=format(Date,"%m/%d"))
+
+#k1516 <- Final_data[!(Final_data$year == "2014" | Final_data$year == "2017" | Final_data$year == "2018" | Final_data$year == "2019"),]
+
+#k1819 <- Final_data[!(Final_data$year == "2014" | Final_data$year == "2015" | Final_data$year == "2016" | Final_data$year == "2017"),]
+
+#daily average in March, April, May
+Conclusion1 <- Final_data %>%
+  group_by(Date) %>%
+  summarise(Average_by_day_and_year = mean(as.numeric(as.character(`TSS (mg/l)`))))
+Conclusion1M <- Conclusion1%>%
+  mutate(watershed="Mbogiti(T)")
+
+```
+
+```{r}
+g1516 <- Conclusion000[!(Conclusion000$year == "2014" | Conclusion000$year == "2017" | Conclusion000$year == "2018" | Conclusion000$year == "2019"),]
+g1819 <- Conclusion000[!(Conclusion000$year == "2014" | Conclusion000$year == "2015" | Conclusion000$year == "2016" | Conclusion000$year == "2017"),]
+```
+
+#exclude outliers
+```{r}
+Conclusion1M <- na.omit(Conclusion1M)
+Q1 <- quantile(Conclusion1M$Average_by_day_and_year, .25)
+Q3 <- quantile(Conclusion1M$Average_by_day_and_year, .75)
+IQR <- IQR(Conclusion1M$Average_by_day_and_year)
+
+Conclusion1M <- subset(Conclusion1M, Conclusion1M$Average_by_day_and_year> (Q1 - 1.5*IQR) & Conclusion1M$Average_by_day_and_year< (Q3 + 1.5*IQR))
+```
+#heatmap
+```{r}
+Conclusion1M <- Conclusion1M %>%
+  mutate(as.POSIXct(strptime(Conclusion1M$Date, "%Y-%m-%d")))
+
+names(Conclusion1M)[2] <- 'TSS'
+names(Conclusion1M)[4] <- 'DDate'
+
+
+m2 <- ggplot(data=Conclusion1M,aes(x=Date,y=TSS))+
+  geom_point()+
+  labs(title="TSS change in Mbogiti") +
+  #scale_x_date(date_breaks= "1 year",date_labels="%Y/%m/%d")+
+  #theme(axis.text = element_text(size=8,angle=90))+
+  ylab("Average TSS (mg/l)")+
+  xlab("Year")
+m2
+```
+
+```{r}
+pm2 <- ggplotly(
+  p = m2,
+  width = NULL,
+  height = NULL,
+  tooltip = "all",
+  dynamicTicks = FALSE,
+  layerData = 1,
+  originalData = TRUE,
+  source = "A",
+)
+pm2
+```
+
+# All date T - TSS
+```{r}
+#load file and clean data
+thika <- read_csv("T-TT.csv")
+
+#separate day, month, year into different columns 
+tDate_date <- thika
+
+tDate_date$Date <- as.Date(tDate_date$`Date sampled`,format="%m/%d/%y") 
+
+tFinal_data <- tDate_date %>%
+  mutate(date=format(Date, "%d"),month = format(Date, "%m"), year = format(Date, "%Y"),Date_md=format(Date,"%m/%d"))
+
+#g1516 <- gFinal_data[!(gFinal_data$year == "2014" | gFinal_data$year == "2017" | gFinal_data$year == "2018" | gFinal_data$year == "2019"),]
+
+#g1819 <- gFinal_data[!(gFinal_data$year == "2014" | gFinal_data$year == "2015" | gFinal_data$year == "2016" | gFinal_data$year == "2017"),]
+
+#daily average in March, April, May
+tConclusion1 <- tFinal_data %>%
+  group_by(Date) %>%
+  summarise(Average_by_day_and_year = mean(as.numeric(as.character(`TSS (mg/l)`))))
+Conclusion1T <- tConclusion1%>%
+  mutate(watershed="Thika-Valley(C)")
+```
+
+#exclude outliers
+```{r}
+Conclusion1T <- na.omit(Conclusion1T)
+Q1 <- quantile(Conclusion1T$Average_by_day_and_year, .25)
+Q3 <- quantile(Conclusion1T$Average_by_day_and_year, .75)
+IQR <- IQR(Conclusion1T$Average_by_day_and_year)
+
+Conclusion1T <- subset(Conclusion1T, Conclusion1T$Average_by_day_and_year> (Q1 - 1.5*IQR) & Conclusion1T$Average_by_day_and_year< (Q3 + 1.5*IQR))
+```
+#heatmap
+```{r}
+Conclusion1T <- Conclusion1T %>%
+  mutate(as.POSIXct(strptime(Conclusion1T$Date, "%Y-%m-%d")))
+
+names(Conclusion1T)[2] <- 'TSS'
+names(Conclusion1T)[4] <- 'DDate'
+
+
+t2 <- ggplot(data=Conclusion1T,aes(x=Date,y=TSS))+
+  geom_point()+
+  labs(title="TSS change in Thika-Valley") +
+  ylab("Average TSS (mg/l)")+
+  xlab("Year")
+t2
+```
+
+```{r}
+pt2 <- ggplotly(
+  p = t2,
+  width = NULL,
+  height = NULL,
+  tooltip = "all",
+  dynamicTicks = FALSE,
+  layerData = 1,
+  originalData = TRUE,
+  source = "A",
+)
+pt2
+```
+
+```{r}
+grid.arrange(g2,k2,t2,m2,ncol=2,nrow = 2, respect = TRUE)
+```
+
+#plot
+```{r}
+Conclusion_final=rbind(Conclusion1T,Conclusion1M)
+```
+```{r}
+#p <- ggplot(data=Conclusion_final,aes(x=Date,y=Average_by_day_and_year,color=watershed))+
+  geom_line()+
+  labs(title="TSS change in Thika-Valley and Mbogiti",
+       caption="Source:IBM") +
+  #scale_x_date(date_breaks= "1 year",date_labels="%Y/%m/%d")+
+  #theme(axis.text = element_text(size=8,angle=90))+
+  ylab("Average TSS (mg/l)")+
+  xlab("Date")+
+  ylim(c(0,150))
+#p
+```
+
+# individual plots 1M and 1T
+```{r}
+p <- ggplot(data=Conclusion1M,aes(x=Date,y=Average_by_day_and_year))+
+  geom_point()+
+  labs(title="TSS change in Mbogiti",
+       caption="Source:IBM") +
+  #scale_x_date(date_breaks= "1 year",date_labels="%Y/%m/%d")+
+  #theme(axis.text = element_text(size=8,angle=90))+
+  ylab("Average TSS (mg/l)")+
+  xlab("Date")+
+  ylim(c(0,300))
+p
+```
+# All date M - Turbidity
+```{r}
+#load file and clean data
+mbo <- read_csv("M-TT.csv")
+
+#separate day, month, year into different columns 
+Date_date <- mbo
+
+Date_date$Date <- as.Date(Date_date$`Date sampled`,format="%m/%d/%y") #%Y/%m/%d
+
+Final_data <- Date_date %>%
+  mutate(date=format(Date, "%d"),month = format(Date, "%m%"), year = format(Date, "%Y"),Date_md=format(Date,"%m/%d"))
+
+#k1516 <- Final_data[!(Final_data$year == "2014" | Final_data$year == "2017" | Final_data$year == "2018" | Final_data$year == "2019"),]
+
+#k1819 <- Final_data[!(Final_data$year == "2014" | Final_data$year == "2015" | Final_data$year == "2016" | Final_data$year == "2017"),]
+
+#daily average in March, April, May
+Conclusion1 <- Final_data %>%
+  group_by(Date) %>%
+  summarise(Average_by_day_and_year = mean(as.numeric(as.character(`Turbidity (NTU)`))))
+Conclusion1M <- Conclusion1%>%
+  mutate(watershed="Mbogiti(T)")
+```
+# All date T - Turbidity
+```{r}
+#load file and clean data
+thika <- read_csv("T-TT.csv")
+
+#separate day, month, year into different columns 
+tDate_date <- thika
+
+tDate_date$Date <- as.Date(tDate_date$`Date sampled`,format="%m/%d/%y") 
+
+tFinal_data <- tDate_date %>%
+  mutate(date=format(Date, "%d"),month = format(Date, "%m"), year = format(Date, "%Y"),Date_md=format(Date,"%m/%d"))
+
+#g1516 <- gFinal_data[!(gFinal_data$year == "2014" | gFinal_data$year == "2017" | gFinal_data$year == "2018" | gFinal_data$year == "2019"),]
+
+#g1819 <- gFinal_data[!(gFinal_data$year == "2014" | gFinal_data$year == "2015" | gFinal_data$year == "2016" | gFinal_data$year == "2017"),]
+
+#daily average in March, April, May
+Conclusion1 <- tFinal_data %>%
+  group_by(Date) %>%
+  summarise(Average_by_day_and_year = mean(as.numeric(as.character(`Turbidity`))))
+Conclusion1T <- Conclusion1%>%
+  mutate(watershed="Thika-Valley(C)")
+```
+#plot
+```{r}
+Conclusion_final=rbind(Conclusion1T,Conclusion1M)
+```
+```{r}
+p <- ggplot(data=Conclusion_final,aes(x=Date,y=Average_by_day_and_year,color=watershed))+
+  geom_line()+
+  labs(title="Turbidity change in Karurumo and Githambara",
+       caption="Source:IBM") +
+  #scale_x_date(date_breaks= "1 year",date_labels="%Y/%m/%d")+
+  #theme(axis.text = element_text(size=8,angle=90))+
+  ylab("Average Turbidity(NTU)")+
+  xlab("Date")
+p
+```
+# individual plots
+```{r}
+m3 <- ggplot(data=Conclusion1M,aes(x=Date,y=Average_by_day_and_year))+
+  geom_point()+
+  labs(title="Turbidity change in Mbogiti",
+       caption="Source:IBM") +
+  #scale_x_date(date_breaks= "1 year",date_labels="%Y/%m/%d")+
+  #theme(axis.text = element_text(size=8,angle=90))+
+  ylab("Average Turbidity(NTU)")+
+  xlab("Date")
+  #ylim(c(0,150))
+m3
+```
+
+```{r}
+pm3 <- ggplotly(
+  p = m3,
+  width = NULL,
+  height = NULL,
+  tooltip = "all",
+  dynamicTicks = FALSE,
+  layerData = 1,
+  originalData = TRUE,
+  source = "A",
+)
+pm3
+```

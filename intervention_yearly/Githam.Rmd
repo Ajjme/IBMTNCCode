@@ -1,0 +1,86 @@
+---
+title: "Githam"
+author: "Benson Zu"
+date: "4/19/2021"
+output: html_document
+---
+
+```{r }
+library(readr) #read file
+library(dplyr) #data manipulation
+library(tidyr) #overall
+library(lubridate) #read date
+library(tibble)
+```
+
+```{r}
+#load file and clean data
+githam <- read.csv("githam_water.csv", header=FALSE)
+RawData <- githam[1:3]
+Clean_data <- RawData[-1,]
+
+#githam = Clean_data %>% mutate( discharge =Clean_data$V3) ##Problem
+
+#separate day, month, year into different columns 
+Date_date <- githam 
+
+Date_date$Date <- as.Date(Date_date$V1,format="%m/%d/%y") #%Y/%m/%d
+Final_data <- Date_date %>%
+  mutate(date=format(Date, "%d"),month = format(Date, "%m"), year = format(Date, "%Y"))
+
+```
+
+```{r}
+#daily average in March, April, May
+Conclusion1 <- Final_data %>%
+  group_by(date,month,year) %>%
+  summarise(Average = mean(as.numeric(as.character(V3)))) 
+
+Conclusion1$md <- paste(Conclusion1$month, Conclusion1$date,sep = "/")
+Conclusion2 <- Conclusion1
+```
+
+```{r}
+for (i in (2015:2020)){
+  nam <- paste("gdaymean", i, sep = "")
+  print(nam)
+  assign(nam,Conclusion2%>%
+           filter(year==i))
+}
+gdaymean2019$md <- as.factor(gdaymean2019$md)
+gdaymean2018$md <- as.factor(gdaymean2018$md)
+gdaymean2017$md <- as.factor(gdaymean2017$md)
+gdaymean2016$md <- as.factor(gdaymean2016$md)
+gdaymean2015$md <- as.factor(gdaymean2015$md)
+gdaymean2020$md <- as.factor(gdaymean2020$md)
+
+```
+
+```{r}
+
+# plot for daily trend from 2015 to 2020 (except for 2017 and 2020)
+# plot for daily trend from 2015 to 2020 (except for 2017 and 2020)
+plot(daymean2018$md,daymean2018$Average,ylim=c(0.1,0.8),
+        main="Water Level change from 2015 to 2019 in Githambara",
+        xlab="Month/Date",
+        ylab="Water Level / m")
+lines(daymean2019$md,daymean2019$Average,type="p",pch=20,col="green",xlab="Month/Date",ylab="discharge rate", main="data",ylim=c(0.020,0.055))
+lines(daymean2016$md,daymean2016$Average,type="p",pch=16,col="purple",xlab="Month/Date",ylab="discharge rate", main="data")
+lines(daymean2018$md,daymean2018$Average,type="p",pch=17,col="blue",xlab="Month/Date",ylab="discharge rate", main="data")
+lines(daymean2015$md,daymean2015$Average,type="p",pch=18,col="red",xlab="Month/Date",ylab="discharge rater", main="data")
+
+lines(smooth.spline(daymean2019$Average ~ daymean2019$md, spar = 0.5), 
+      col = "darkgreen", lwd = 2)
+lines(smooth.spline(daymean2016$Average ~ daymean2016$md, spar = 0.5), 
+      col = "purple", lwd = 2)
+lines(smooth.spline(daymean2018$Average ~ daymean2018$md, spar = 0.5), 
+      col = "darkblue", lwd = 2)
+lines(smooth.spline(daymean2015$Average ~ daymean2015$md, spar = 0.5), col = "darkred", lwd = 2,)
+
+legend("topleft",inset=.05,legend=c("2015","2016","2018","2019"), col=c("red","purple",'blue','green'),lty=1, ncol=1,cex=0.75)
+```
+
+```{r}
+
+```
+

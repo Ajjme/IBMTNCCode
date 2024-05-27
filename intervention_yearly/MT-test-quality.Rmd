@@ -1,0 +1,152 @@
+---
+title: "MT-test2"
+output: html_document
+---
+
+```{r }
+library(readr) #read file
+library(dplyr) #data manipulation
+library(tidyr) #overall
+library(lubridate) #read date
+library(tibble)
+library(ggplot2)
+```
+
+# Mbogiti TSS
+```{r}
+#load file and clean data
+mbo <- read_csv("M-TT.csv")
+
+#separate day, month, year into different columns 
+Date_date <- mbo
+Date_date$Date <- as.Date(Date_date$`Date sampled`,format="%m/%d/%y") 
+Conclusion1M <- Date_date %>%
+  mutate(date=format(Date, "%d"),month = format(Date, "%m"), year = format(Date, "%Y"),Date_md=format(Date,"%m/%d"))
+
+#daily average in March, April, May
+Conclusion1MM <- Conclusion1M %>%
+  group_by(date,month,year) %>%
+  summarise(Average = mean(as.numeric(as.character(`Turbidity (NTU)`))))
+
+Conclusion1M <- na.omit(Conclusion1MM)
+Q1 <- quantile(Conclusion1M$Average, .25)
+Q3 <- quantile(Conclusion1M$Average, .75)
+IQR <- IQR(Conclusion1M$Average)
+
+MConclusion1 <- subset(Conclusion1M, Conclusion1M$Average> (Q1 - 1.5*IQR) & Conclusion1M$Average< (Q3 + 1.5*IQR))
+
+MConclusion1$md <- paste(MConclusion1$month, MConclusion1$date,sep = "/")
+
+MConclusion2 <- MConclusion1
+```
+
+```{r}
+for (i in (2015:2020)){
+  nam <- paste("mdaymean", i, sep = "")
+  print(nam)
+  assign(nam,MConclusion2%>%
+           filter(year==i))
+}
+mdaymean2019$md <- as.factor(mdaymean2019$md)
+mdaymean2018$md <- as.factor(mdaymean2018$md)
+mdaymean2017$md <- as.factor(mdaymean2017$md)
+mdaymean2016$md <- as.factor(mdaymean2016$md)
+mdaymean2015$md <- as.factor(mdaymean2015$md)
+mdaymean2020$md <- as.factor(mdaymean2020$md)
+```
+```{r}
+x <- na.omit(tdaymean2019)
+mean(x$Average)
+```
+
+# Thika-Valley TSS
+```{r}
+#load file and clean data
+tss <- read_csv("T-TT.csv")
+
+#separate day, month, year into different columns 
+Date_date <- tss
+Date_date$Date <- as.Date(Date_date$`Date sampled`,format="%m/%d/%y") 
+Conclusion1T <- Date_date %>%
+  mutate(date=format(Date, "%d"),month = format(Date, "%m"), year = format(Date, "%Y"),Date_md=format(Date,"%m/%d"))
+
+#daily average in March, April, May
+Conclusion1TT <- Conclusion1T %>%
+  group_by(date,month,year) %>%
+  summarise(Average = mean(as.numeric(as.character(`Turbidity`))))
+
+Conclusion1T <- na.omit(Conclusion1TT)
+Q1 <- quantile(Conclusion1T$Average, .25)
+Q3 <- quantile(Conclusion1T$Average, .75)
+IQR <- IQR(Conclusion1T$Average)
+
+TConclusion1 <- subset(Conclusion1T, Conclusion1T$Average> (Q1 - 1.5*IQR) & Conclusion1T$Average< (Q3 + 1.5*IQR))
+
+TConclusion1$md <- paste(TConclusion1$month, TConclusion1$date,sep = "/")
+
+TConclusion2 <- TConclusion1
+```
+
+```{r}
+for (i in (2015:2020)){
+  nam <- paste("tdaymean", i, sep = "")
+  print(nam)
+  assign(nam,TConclusion2%>%
+           filter(year==i))
+}
+tdaymean2019$md <- as.factor(tdaymean2019$md)
+tdaymean2018$md <- as.factor(tdaymean2018$md)
+tdaymean2017$md <- as.factor(tdaymean2017$md)
+tdaymean2016$md <- as.factor(tdaymean2016$md)
+tdaymean2015$md <- as.factor(tdaymean2015$md)
+tdaymean2020$md <- as.factor(tdaymean2020$md)
+```
+
+```{r}
+# M TSS - 2015 & 2019
+# p-value = 0.02094
+wilcox.test(mdaymean2015$Average, mdaymean2019$Average)
+
+# T TSS - 2015 & 2019
+#p-value = 0.8328
+wilcox.test(tdaymean2015$Average, tdaymean2019$Average)
+```
+
+```{r}
+# M Turbidity - 2015 & 2019
+# p-value = 0.0154
+wilcox.test(mdaymean2015$Average, mdaymean2019$Average)
+
+# T Turbidity - 2015 & 2019
+#p-value = 0.1886
+wilcox.test(tdaymean2015$Average, tdaymean2019$Average)
+```
+
+```{r}
+mt_mean <- read_csv("mt_quality_mean.csv")
+
+
+mt2 <- ggplot(data=mt_mean,aes(x=year,y=TSS,color=watershed))+
+  geom_line()+
+  geom_point()+
+  #labs(title="Annual average Turbidity change (NTU) in Thika-Valley and Mbogiti", caption="Source:IBM") +
+  #scale_x_date(date_breaks= "1 year",date_labels="%Y/%m/%d")+
+  #theme(axis.text = element_text(size=8,angle=90))+
+  ylab("Turbidity")+
+  xlab("year")
+mt2
+```
+
+```{r}
+pmt2 <- ggplotly(
+  p = mt2,
+  width = NULL,
+  height = NULL,
+  tooltip = "all",
+  dynamicTicks = FALSE,
+  layerData = 1,
+  originalData = TRUE,
+  source = "A",
+)
+pmt2
+```

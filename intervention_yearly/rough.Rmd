@@ -1,0 +1,151 @@
+---
+title: "heatmap - trial 1"
+output: html_document
+---
+
+```{r }
+library(readr) #read file
+library(dplyr) #data manipulation
+library(tidyr) #overall
+library(lubridate) #read date
+library(tibble)
+```
+
+```{r}
+#load file and clean data
+githam <- read.csv("karuru_water.csv", header=FALSE)
+RawData <- githam[1:3]
+Clean_data <- RawData[-1,]
+
+githam = Clean_data %>% mutate( discharge =Clean_data$V3) ##Problem
+
+#separate day, month, year into different columns 
+Date_date <- githam 
+
+Date_date$Date <- as.Date(Date_date$V1,format="%Y/%m/%d") #%Y/%m/%d
+Final_data <- Date_date %>%
+  mutate(date=format(Date, "%d"),month = format(Date, "%m"), year = format(Date, "%Y"))
+
+```
+
+```{r}
+#daily average in March, April, May
+Conclusion1 <- Final_data %>%
+  group_by(date,month,year,Date) %>%
+  summarise(Average = mean(as.numeric(as.character(discharge))))
+
+```
+
+```{r}
+
+#load file and clean data
+githam1 <- read.csv("githam_water.csv", header=FALSE)
+RawData1 <- githam1[1:3]
+Clean_data1 <- RawData1[-1,]
+
+#separate day, month, year into different columns 
+Date_date1 <- githam1
+
+Date_date1$Date <- as.Date(Date_date1$V1,format="%m/%d/%y") #%Y/%m/%d
+Final_data1 <- Date_date1 %>%
+  mutate(date=format(Date, "%d"),month = format(Date, "%m"), year = format(Date, "%Y"))
+
+```
+
+```{r}
+#daily average in March, April, May
+Conclusion11 <- Final_data1 %>%
+  group_by(date,month,year,Date) %>%
+  summarise(Average = mean(as.numeric(as.character(V3)))) 
+```
+
+```{r}
+plot(Conclusion1$Date,Conclusion1$Average,ylim=c(0.24,1.25),
+        main="Water Level change from 2015-2020 in Karurumo(C) and Githambara(T)",
+        xlab="Date",
+        ylab="Water Level / m", col = "green")
+lines(Conclusion11$Date,Conclusion11$Average,type="p",pch=20,col="red")
+```
+
+water quality - Turbidity
+
+```{r}
+#load file and clean data
+gtu <- read.csv("G_WQ.csv", header=FALSE)
+RawData0 <- gtu[2:6]
+Clean_data0 <- RawData0[-1,]
+
+#separate day, month, year into different columns 
+Date_date0 <- Clean_data0
+
+Date_date0$Date <- as.Date(Date_date0$V2,format="%m/%d/%y") #%Y/%m/%d
+Final_data0 <- Date_date0 %>%
+  mutate(date=format(Date, "%d"),month = format(Date, "%m"), year = format(Date, "%Y"),Date_md=format(Date,"%m/%d"))
+
+```
+
+
+```{r}
+#daily average in March, April, May
+Conclusion0 <- Final_data0 %>%
+  group_by(date,month,year,Date_md) %>%
+  summarise(Average = mean(as.numeric(as.character(V5)))) 
+```
+
+```{r}
+gq00 <- read.csv("K_WQ.csv", header=FALSE)
+RawData00 <- gq00[2:6]
+Clean_data00 <- RawData00[-1,]
+
+#separate day, month, year into different columns 
+Date_date00 <- Clean_data00
+
+Date_date00$Date <- as.Date(Date_date00$V2,format="%m/%d/%y") #%Y/%m/%d
+Final_data00 <- Date_date00 %>%
+  mutate(date=format(Date, "%d"),month = format(Date, "%m"), year = format(Date, "%Y"),Date_md=format(Date,"%m/%d"))
+
+```
+
+
+```{r}
+#daily average in March, April, May
+Conclusion00 <- Final_data00 %>%
+  group_by(date,month,year,Date) %>%
+  summarise(Average = mean(as.numeric(as.character(V5)))) 
+```
+
+```{r}
+
+plot(Conclusion0$Date,Conclusion0$Average,ylim=c(10,1800),
+        main="Turbidity change from 2014 to 2020 in Githambara and Karurumo",
+        xlab="Date",
+        ylab="Turbidity(NTU)", col = "red")
+lines(Conclusion00$Date,Conclusion00$Average,type="p",pch=20,col="green", ylim=c(10,1800))
+```
+TSS
+```{r}
+#daily average in March, April, May
+Conclusion000 <- Final_data0 %>%
+  group_by(date,month,year,Date_md) %>%
+  summarise(Average = mean(as.numeric(as.character(V6)))) 
+```
+
+```{r}
+#g1516 <- Conclusion000[!(Conclusion000$year == "2014" | Conclusion000$year == "2017" | Conclusion000$year == "2018" | Conclusion000$year == "2019"),]
+#g1819 <- Conclusion000[!(Conclusion000$year == "2014" | Conclusion000$year == "2015" | Conclusion000$year == "2016" | Conclusion000$year == "2017"),]
+#plot(g1516$, g1516$Average)
+```
+
+```{r}
+Conclusion100 <- Final_data00 %>%
+  group_by(date,month,year,Date) %>%
+  summarise(Average = mean(as.numeric(as.character(V6)))) 
+```
+
+```{r}
+plot(Conclusion000$Date,Conclusion000$Average,ylim=c(5,1500),
+        main="TSS change from 2014 to 2020 in Githambara and Karurumo",
+        xlab="Date",
+        ylab="TSS(mg)", col = "red")
+lines(Conclusion100$Date,Conclusion100$Average,type="p",pch=20,col="green")
+```

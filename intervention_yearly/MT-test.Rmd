@@ -1,0 +1,161 @@
+---
+title: "MT-test"
+output: html_document
+---
+
+```{r }
+library(readr) #read file
+library(dplyr) #data manipulation
+library(tidyr) #overall
+library(lubridate) #read date
+library(tibble)
+```
+
+# Mbogiti water level 
+```{r}
+#load file and clean data
+mbo <- read_csv("M_WL.csv")
+RawData <- mbo[1:3]
+
+#separate day, month, year into different columns 
+Date_date <- RawData 
+
+Date_date$Date <- as.Date(Date_date$`Date Time, GMT+03:00`,format="%m/%d/%y") 
+
+Final_data <- Date_date %>%
+  mutate(date=format(Date, "%d"),month = format(Date, "%m%"), year = format(Date, "%Y"),Date_md=format(Date,"%m/%d"))
+```
+
+```{r}
+#daily average in March, April, May
+MConclusion1 <- Final_data %>%
+  group_by(date,month,year) %>%
+  summarise(Average = mean(as.numeric(as.character(`Water Level (m)`))))
+
+MConclusion1$md <- paste(MConclusion1$month, MConclusion1$date,sep = "/")
+MConclusion2 <- MConclusion1
+```
+
+```{r}
+for (i in (2015:2020)){
+  nam <- paste("mdaymean", i, sep = "")
+  print(nam)
+  assign(nam,MConclusion2%>%
+           filter(year==i))
+}
+mdaymean2019$md <- as.factor(mdaymean2019$md)
+mdaymean2018$md <- as.factor(mdaymean2018$md)
+mdaymean2017$md <- as.factor(mdaymean2017$md)
+mdaymean2016$md <- as.factor(mdaymean2016$md)
+mdaymean2015$md <- as.factor(mdaymean2015$md)
+mdaymean2020$md <- as.factor(mdaymean2020$md)
+
+```
+
+# Thika-Valley water level 
+```{r}
+#load file and clean data
+thika <- read_csv("T_WL.csv")
+RawData <- thika[1:3]
+
+#separate day, month, year into different columns 
+tDate_date <- RawData 
+
+tDate_date$Date <- as.Date(tDate_date$`Date Time, GMT+03:00`,format="%m/%d/%y") 
+
+tFinal_data <- tDate_date %>%
+  mutate(date=format(Date, "%d"),month = format(Date, "%m"), year = format(Date, "%Y"),Date_md=format(Date,"%m/%d"))
+```
+
+```{r}
+#daily average in March, April, May
+tConclusion1 <- tFinal_data %>%
+  group_by(date,month,year) %>%
+  summarise(Average = mean(as.numeric(as.character(`Water Level (m)`))))
+
+tConclusion1$md <- paste(tConclusion1$month, tConclusion1$date,sep = "/")
+tConclusion2 <- tConclusion1
+```
+
+```{r}
+for (i in (2015:2020)){
+  nam <- paste("tdaymean", i, sep = "")
+  print(nam)
+  assign(nam,tConclusion2%>%
+           filter(year==i))
+}
+tdaymean2019$md <- as.factor(tdaymean2019$md)
+tdaymean2018$md <- as.factor(tdaymean2018$md)
+tdaymean2017$md <- as.factor(tdaymean2017$md)
+tdaymean2016$md <- as.factor(tdaymean2016$md)
+tdaymean2015$md <- as.factor(tdaymean2015$md)
+tdaymean2020$md <- as.factor(tdaymean2020$md)
+```
+
+# t-test
+```{r}
+#2015
+# p-value: <2.2e-16 
+t.test(mdaymean2015$Average,tdaymean2015$Average)
+
+#2016
+#p-value: <2.2e-16 
+t.test(mdaymean2016$Average, tdaymean2016$Average)
+
+#2017 
+# p-value: <2.2e-16 
+t.test(mdaymean2017$Average, tdaymean2017$Average)
+
+#2018
+# p-value: 2.2e-16 
+t.test(mdaymean2018$Average,tdaymean2018$Average)
+
+#2019
+# p-value: 2.2e-16 
+t.test(mdaymean2019$Average, tdaymean2019$Average)
+
+#2020 - too little data
+#p-value = 2.2e-16 
+t.test(mdaymean2020$Average, tdaymean2020$Average)
+#p-value = 1.289e-08
+wilcox.test(mdaymean2020$Average, tdaymean2020$Average)
+```
+
+```{r}
+# M - 2015 & 2019
+# p-value = 4.181e-06
+t.test(mdaymean2015$Average, mdaymean2019$Average)
+
+# T - 2015 & 2019
+#p-value = 0.05585
+t.test(tdaymean2015$Average, tdaymean2019$Average)
+```
+
+```{r}
+mt_mean <- read_csv("mt_mean.csv")
+mt_clean <- mt_mean[!(mt_mean$Year == "2020"),]
+
+mt1 <- ggplot(data=mt_clean,aes(x=Year,y=Average,color=watershed))+
+  geom_line()+
+  geom_point()+
+  #labs(title="Annual average water level change in Thika-Valley and Mbogiti",caption="Source:IBM") +
+  #scale_x_date(date_breaks= "1 year",date_labels="%Y/%m/%d")+
+  #theme(axis.text = element_text(size=8,angle=90))+
+  ylab("Water level(m)")+
+  xlab("year")
+mt1
+```
+
+```{r}
+pmt1 <- ggplotly(
+  p = mt1,
+  width = NULL,
+  height = NULL,
+  tooltip = "all",
+  dynamicTicks = FALSE,
+  layerData = 1,
+  originalData = TRUE,
+  source = "A",
+)
+pmt1
+```

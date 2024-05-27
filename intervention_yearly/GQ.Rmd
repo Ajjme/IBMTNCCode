@@ -1,0 +1,136 @@
+---
+title: "GQ - Turbidity & TSS"
+output: html_document
+---
+
+```{r}
+library(readr) #read file
+library(dplyr) #data manipulation
+library(tidyr) #overall
+library(lubridate) #read date
+library(tibble)
+```
+
+```{r}
+#Turbidity
+```
+
+```{r}
+#load file and clean data
+gq <- read.csv("G_WQ.csv", header=FALSE)
+RawData <- gq[2:6]
+Clean_data <- RawData[-1,]
+
+#separate day, month, year into different columns 
+Date_date <- Clean_data
+
+Date_date$Date <- as.Date(Date_date$V2,format="%m/%d/%y") #%Y/%m/%d
+Final_data <- Date_date %>%
+  mutate(date=format(Date, "%d"),month = format(Date, "%m"), year = format(Date, "%Y"))
+
+```
+
+
+```{r}
+#daily average in March, April, May
+Conclusion1 <- Final_data %>%
+  group_by(date,month,year) %>%
+  summarise(Average = mean(as.numeric(as.character(V5)))) 
+
+Conclusion1$md <- paste(Conclusion1$month, Conclusion1$date,sep = "/")
+Conclusion1 <- na.omit(Conclusion1)
+Conclusion2 <- Conclusion1
+```
+
+```{r}
+for (i in (2014:2019)){
+  nam <- paste("daymean", i, sep = "")
+  print(nam)
+  assign(nam,Conclusion2%>%
+           filter(year==i))
+}
+daymean2014$md <- as.factor(daymean2014$md)
+daymean2015$md <- as.factor(daymean2015$md)
+daymean2016$md <- as.factor(daymean2016$md)
+daymean2017$md <- as.factor(daymean2017$md)
+daymean2018$md <- as.factor(daymean2018$md)
+daymean2019$md <- as.factor(daymean2019$md)
+```
+
+```{r}
+# plot for daily trend from 2014 to 2019 (except for 2017 and 2014)
+plot(daymean2016$md,daymean2016$Average,ylim=c(10,1800),
+        main="Water Turbidity Level change from 2014 to 2019 in Githambara",
+        xlab="Month/Date",
+        ylab="Turbidity(NTU)")
+lines(daymean2016$md,daymean2016$Average,type="p",pch=20,col="red",xlab="Month/Date",ylab="Turbidity(NTU)", main="data",ylim=c(10,1800))
+lines(daymean2015$md,daymean2015$Average,type="p",pch=16,col="green",xlab="Month/Date",ylab="Turbidity(NTU)", main="data",ylim=c(10,1800))
+lines(daymean2019$md,daymean2019$Average,type="p",pch=18,col="purple",xlab="Month/Date",ylab="Turbidity(NTU)", main="data")
+lines(daymean2018$md,daymean2018$Average,type="p",pch=17,col="blue",xlab="Month/Date",ylab="Turbidity(NTU)", main="data")
+
+lines(smooth.spline(daymean2016$Average ~ daymean2016$md, spar = 0.5), 
+      col = "darkred", lwd = 2)
+lines(smooth.spline(daymean2015$Average ~ daymean2015$md, spar = 0.5), 
+      col = "darkgreen", lwd = 2)
+lines(smooth.spline(daymean2019$Average ~ daymean2019$md, spar = 0.5), 
+      col = "purple", lwd = 2)
+lines(smooth.spline(daymean2018$Average ~ daymean2018$md, spar = 0.5), 
+      col = "darkblue", lwd = 2)
+lines(smooth.spline(daymean2015$Average ~ daymean2015$md, spar = 0.5), col = "darkred", lwd = 2,)
+
+legend("topleft",inset=.05,legend=c("2015","2016","2018","2019"), col=c("green","red",'blue','purple'),lty=1, ncol=1,cex=0.75)
+```
+
+```{r}
+#TSS
+```
+
+```{r}
+#daily average in March, April, May
+Conclusion1 <- Final_data %>%
+  group_by(date,month,year) %>%
+  summarise(Average = mean(as.numeric(as.character(V6)))) 
+
+Conclusion1$md <- paste(Conclusion1$month, Conclusion1$date,sep = "/")
+Conclusion1 <- na.omit(Conclusion1)
+Conclusion2 <- Conclusion1
+```
+
+```{r}
+for (i in (2014:2019)){
+  nam <- paste("daymean", i, sep = "")
+  print(nam)
+  assign(nam,Conclusion2%>%
+           filter(year==i))
+}
+daymean2014$md <- as.factor(daymean2014$md)
+daymean2015$md <- as.factor(daymean2015$md)
+daymean2016$md <- as.factor(daymean2016$md)
+daymean2017$md <- as.factor(daymean2017$md)
+daymean2018$md <- as.factor(daymean2018$md)
+daymean2019$md <- as.factor(daymean2019$md)
+```
+
+```{r}
+# plot for daily trend from 2014 to 2019 (except for 2017 and 2014)
+plot(daymean2016$md,daymean2016$Average,ylim=c(5,1000),
+        main="Water Turbidity Level change from 2014 to 2019 in Githambara",
+        xlab="Month/Date",
+        ylab="TSS(mg)")
+lines(daymean2016$md,daymean2016$Average,type="p",pch=20,col="red",xlab="Month/Date",ylab="TSS(mg)", main="data",ylim=c(5,1000))
+lines(daymean2015$md,daymean2015$Average,type="p",pch=16,col="green",xlab="Month/Date",ylab="TSS(mg)", main="data",ylim=c(5,1000))
+lines(daymean2019$md,daymean2019$Average,type="p",pch=18,col="purple",xlab="Month/Date",ylab="TSS(mg)", main="data")
+lines(daymean2018$md,daymean2018$Average,type="p",pch=17,col="blue",xlab="Month/Date",ylab="TSS(mg)", main="data")
+
+lines(smooth.spline(daymean2016$Average ~ daymean2016$md, spar = 0.5), 
+      col = "darkred", lwd = 2)
+lines(smooth.spline(daymean2015$Average ~ daymean2015$md, spar = 0.5), 
+      col = "darkgreen", lwd = 2)
+lines(smooth.spline(daymean2019$Average ~ daymean2019$md, spar = 0.5), 
+      col = "purple", lwd = 2)
+lines(smooth.spline(daymean2018$Average ~ daymean2018$md, spar = 0.5), 
+      col = "darkblue", lwd = 2)
+lines(smooth.spline(daymean2015$Average ~ daymean2015$md, spar = 0.5), col = "darkred", lwd = 2,)
+
+legend("topleft",inset=.05,legend=c("2015","2016","2018","2019"), col=c("green","red",'blue','purple'),lty=1, ncol=1,cex=0.75)
+```

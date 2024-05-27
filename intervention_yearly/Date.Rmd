@@ -1,0 +1,463 @@
+---
+title: "Githam"
+author: "Benson Zu"
+date: "4/19/2021"
+output: html_document
+---
+
+```{r }
+library(readr) #read file
+library(dplyr) #data manipulation
+library(tidyr) #overall
+library(lubridate) #read date
+library(tibble)
+library(ggplot2)
+library(gridExtra)
+library(ggthemes)
+library(gridExtra)
+library(plotly)
+```
+# All date K - water level
+```{r}
+#load file and clean data
+githam <- read_csv("karuru_water.csv")
+RawData <- githam[1:3]
+
+#separate day, month, year into different columns 
+Date_date <- RawData 
+
+Date_date$Date <- as.Date(Date_date$`Date Time, GMT+03:00`,format="%Y/%m/%d") #%Y/%m/%d
+
+Final_data <- Date_date %>%
+  mutate(date=format(Date, "%d"),month = format(Date, "%m%"), year = format(Date, "%Y"),Date_md=format(Date,"%m/%d"))
+
+#daily average in March, April, May
+Conclusion1 <- Final_data %>%
+  group_by(Date) %>%
+  summarise(Average_by_day_and_year = mean(as.numeric(as.character(`Water level (m)`))))
+Conclusion1K <- Conclusion1%>%
+  mutate(watershed="Karurumo(C)")
+#"#D61818","#FFAE63","#FFFFBD","#B5E384"
+#write.csv(Conclusion1K,"KW5.csv", row.names = FALSE)
+```
+
+#heatmap
+```{r}
+Conclusion1K <- Conclusion1K %>%
+  mutate(as.POSIXct(strptime(Conclusion1K$Date, "%Y-%m-%d")))
+
+names(Conclusion1K)[2] <- 'waterLevel'
+names(Conclusion1K)[4] <- 'DDate'
+
+hdata <- Conclusion1K %>% mutate(
+  week = isoweek(Conclusion1K$DDate),
+  wday = wday(Conclusion1K$DDate)-1,
+  year = year(Conclusion1K$DDate))
+
+k1 <- ggplot(hdata, aes(week, wday, fill = waterLevel)) +
+  geom_tile(color = "white") +
+  facet_wrap(~ year, ncol = 1) +
+  scale_fill_gradientn(colours = c("#F0EFF0", "#AAB6FB","#6096FD","#031B88")) +
+  scale_x_continuous(name = "Week of the Year", breaks = 1:52, labels = 1:52) +
+  labs(subtitle = "Change in Water Level (m) in Karurumo", y = "Day of week") +
+  theme(axis.text = element_text(size = 5), axis.title = element_text(size = 8, face = "bold"))
+
+k1
+```
+
+```{r}
+pk1 <- ggplotly(
+  p = k1,
+  width = NULL,
+  height = NULL,
+  tooltip = "all",
+  dynamicTicks = FALSE,
+  layerData = 1,
+  originalData = TRUE,
+  source = "A",
+)
+```
+
+# All date G - water level
+```{r}
+#load file and clean data
+githam <- read_csv("githam_water.csv")
+RawData <- githam[1:3]
+
+#separate day, month, year into different columns 
+Date_date <- RawData 
+
+Date_date$Date <- as.Date(Date_date$`Date Time, GMT+03:00`,format="%m/%d/%y") 
+
+Final_data <- Date_date %>%
+  mutate(date=format(Date, "%d"),month = format(Date, "%m"), year = format(Date, "%Y"),Date_md=format(Date,"%m/%d"))
+
+#daily average in March, April, May
+Conclusion1 <- Final_data %>%
+  group_by(Date) %>%
+  summarise(Average_by_day_and_year = mean(as.numeric(as.character(`Water Level.`))))
+Conclusion1G <- Conclusion1%>%
+  mutate(watershed="Githambara(T)")
+#write.csv(Conclusion1G,"GW5.csv", row.names = FALSE)
+```
+
+
+```{r}
+Conclusion_final=rbind(Conclusion1K,Conclusion1G)
+```
+```{r}
+p <- ggplot(data=Conclusion_final,aes(x=Date,y=Average_by_day_and_year,color=watershed))+
+  geom_line()+
+  labs(title="Water level change in Karurumo and Githambara",
+       caption="Source:IBM") +
+  #scale_x_date(date_breaks= "1 year",date_labels="%Y/%m/%d")+
+  #theme(axis.text = element_text(size=8,angle=90))+
+  ylab("Average Water Level(m)")+
+  xlab("Date")
+p
+```
+
+```{r}
+Conclusion1G <- Conclusion1G %>%
+  mutate(as.POSIXct(strptime(Conclusion1G$Date, "%Y-%m-%d")))
+
+names(Conclusion1G)[2] <- 'waterLevel'
+names(Conclusion1G)[4] <- 'DDate'
+
+hdata <- Conclusion1G %>% mutate(
+  week = isoweek(Conclusion1G$DDate),
+  wday = wday(Conclusion1G$DDate)-1,
+  year = year(Conclusion1G$DDate))
+
+
+g1 <-ggplot(hdata, aes(week, wday, fill = waterLevel)) +
+  geom_tile(color = "white") +
+  facet_wrap(~ year, ncol = 1) +
+  scale_fill_gradientn(colours = c( "#F0EFF0", "#AAB6FB","#6096FD","#031B88")) +
+  scale_x_continuous(name = "Week of the Year", breaks = 1:52, labels = 1:52) +
+  labs(subtitle = "Change in Water Level(m) in Githambara", y = "Day of week") +
+  theme(axis.text = element_text(size = 5), axis.title = element_text(size = 8, face = "bold"))
+g1
+```
+
+```{r}
+pg1 <- ggplotly(
+  p = g1,
+  width = NULL,
+  height = NULL,
+  tooltip = "all",
+  dynamicTicks = FALSE,
+  layerData = 1,
+  originalData = TRUE,
+  source = "A",
+)
+```
+
+# All date K - TSS
+```{r}
+#load file and clean data
+karurumo <- read_csv("K_WQ.csv")
+
+
+#separate day, month, year into different columns 
+Date_date <- karurumo
+
+Date_date$Date <- as.Date(Date_date$`Date sampled`,format="%m/%d/%y") #%Y/%m/%d
+
+Final_data <- Date_date %>%
+  mutate(date=format(Date, "%d"),month = format(Date, "%m"), year = format(Date, "%Y"),Date_md=format(Date,"%m/%d"))
+
+#k1516 <- Final_data[!(Final_data$year == "2014" | Final_data$year == "2017" | Final_data$year == "2018" | Final_data$year == "2019"),]
+
+#k1819 <- Final_data[!(Final_data$year == "2014" | Final_data$year == "2015" | Final_data$year == "2016" | Final_data$year == "2017"),]
+
+#daily average in March, April, May
+Conclusion1 <- Final_data %>%
+  group_by(Date) %>%
+  summarise(Average_by_day_and_year = mean(as.numeric(as.character(`TSS (mg/l)`))))
+Conclusion1K <- Conclusion1%>%
+  mutate(watershed="Karurumo(C)")
+```
+#exclude outliers
+```{r}
+Conclusion1K <- na.omit(Conclusion1K)
+Q1 <- quantile(Conclusion1K$Average_by_day_and_year, .25)
+Q3 <- quantile(Conclusion1K$Average_by_day_and_year, .75)
+IQR <- IQR(Conclusion1K$Average_by_day_and_year)
+
+Conclusion1K <- subset(Conclusion1K, Conclusion1K$Average_by_day_and_year> (Q1 - 1.5*IQR) & Conclusion1K$Average_by_day_and_year< (Q3 + 1.5*IQR))
+```
+#heatmap
+```{r}
+Conclusion1K <- Conclusion1K %>%
+  mutate(as.POSIXct(strptime(Conclusion1K$Date, "%Y-%m-%d")))
+
+names(Conclusion1K)[2] <- 'TSS'
+names(Conclusion1K)[4] <- 'DDate'
+Conclusion1K <- Conclusion1K %>%
+  mutate(date=format(Date, "%d"),month = format(Date, "%m"), year = format(Date, "%Y"),Date_md=format(Date,"%m/%d"))
+#write.csv(Conclusion1K,"aa.csv", row.names = FALSE)
+
+hdata <- Conclusion1K %>% mutate(
+  week = isoweek(Conclusion1K$DDate),
+  wday = wday(Conclusion1K$DDate)-1,
+  year = year(Conclusion1K$DDate))
+
+
+k2 <- ggplot(hdata, aes(week, wday, fill = TSS)) +
+  geom_tile(color = "white") +
+  facet_wrap(~ year, ncol = 1) +
+  scale_fill_gradientn(colours = c("#B5E384","#FFFFBD","#FFAE63","#D61818")) +
+  scale_x_continuous(name = "Week of the Year", breaks = 1:52, labels = 1:52) +
+  labs(subtitle = "Change in TSS in Karurumo", y = "Day of week") +
+  theme(axis.text = element_text(size = 5), axis.title = element_text(size = 8, face = "bold"))
+```
+
+# individual plots 1K and 1G
+```{r}
+k2 <- ggplot(data=Conclusion1K,aes(x=Date,y=TSS))+
+  geom_point()+
+  labs(title="TSS change in Karurumo",
+       caption="Source:IBM") +
+  scale_x_date(date_breaks= "1 year",date_labels="%Y")+
+  ylab("Average TSS (mg/l)")+
+  xlab("Date")
+k2
+```
+
+# All date G - TSS
+```{r}
+#load file and clean data
+githam <- read_csv("G_WQ.csv")
+
+#separate day, month, year into different columns 
+gDate_date <- githam 
+
+gDate_date$Date <- as.Date(gDate_date$`Date sampled`,format="%d/%y/%y") 
+
+gFinal_data <- gDate_date %>%
+  mutate(date=format(Date, "%d"),month = format(Date, "%m"), year = format(Date, "%Y"),Date_md=format(Date,"%m/%d"))
+
+#g1516 <- gFinal_data[!(gFinal_data$year == "2014" | gFinal_data$year == "2017" | gFinal_data$year == "2018" | gFinal_data$year == "2019"),]
+
+#g1819 <- gFinal_data[!(gFinal_data$year == "2014" | gFinal_data$year == "2015" | gFinal_data$year == "2016" | gFinal_data$year == "2017"),]
+
+#daily average in March, April, May
+gConclusion1 <- gFinal_data %>%
+  group_by(Date) %>%
+  summarise(Average_by_day_and_year = mean(as.numeric(as.character(`TSS (mg/l)`))))
+Conclusion1G <- gConclusion1%>%
+  mutate(watershed="Githambara(T)")
+```
+#plot
+```{r}
+Conclusion_final=rbind(Conclusion1K,Conclusion1G)
+```
+```{r}
+g2 <- ggplot(data=Conclusion1G,aes(x=Date,y=TSS))+
+  geom_point()+
+  labs(title="TSS change in Githambara") +
+  ylab("Average TSS (mg/l)")+
+  xlab("Year")
+g2
+```
+
+```{r}
+pg2 <- ggplotly(
+  p = 2,
+  width = NULL,
+  height = NULL,
+  tooltip = "all",
+  dynamicTicks = FALSE,
+  layerData = 1,
+  originalData = TRUE,
+  source = "A",
+)
+pg2
+```
+
+#exclude outliers
+```{r}
+Conclusion1G <- na.omit(Conclusion1G)
+Q1 <- quantile(Conclusion1G$Average_by_day_and_year, .25)
+Q3 <- quantile(Conclusion1G$Average_by_day_and_year, .75)
+IQR <- IQR(Conclusion1G$Average_by_day_and_year)
+
+Conclusion1G <- subset(Conclusion1G, Conclusion1G$Average_by_day_and_year> (Q1 - 1.5*IQR) & Conclusion1G$Average_by_day_and_year< (Q3 + 1.5*IQR))
+```
+#heatmap
+```{r}
+Conclusion1G <- Conclusion1G %>%
+  mutate(as.POSIXct(strptime(Conclusion1G$Date, "%Y-%m-%d")))
+
+names(Conclusion1G)[2] <- 'TSS'
+names(Conclusion1G)[4] <- 'DDate'
+
+hdata <- Conclusion1G %>% mutate(
+  week = isoweek(Conclusion1G$DDate),
+  wday = wday(Conclusion1G$DDate)-1,
+  year = year(Conclusion1G$DDate))
+
+ggplot(hdata, aes(week, wday, fill = TSS)) +
+  geom_tile(color = "white") +
+  facet_wrap(~ year, ncol = 1) +
+  scale_fill_gradientn(colours = c( "#D61818","#FFAE63","#FFFFBD","#B5E384")) +
+  scale_x_continuous(name = "Week of the Year", breaks = 1:52, labels = 1:52) +
+  labs(subtitle = "Change in Turbidity in Githambara", y = "Day of week") +
+  theme(axis.text = element_text(size = 5), axis.title = element_text(size = 8, face = "bold"))
+```
+
+
+
+# All date K - Turbidity
+```{r}
+#load file and clean data
+karurumo <- read_csv("K_WQ.csv")
+
+#separate day, month, year into different columns 
+Date_date <- karurumo
+
+Date_date$Date <- as.Date(Date_date$`Date sampled`,format="%m/%d/%y") #%Y/%m/%d
+
+Final_data <- Date_date %>%
+  mutate(date=format(Date, "%d"),month = format(Date, "%m%"), year = format(Date, "%Y"),Date_md=format(Date,"%m/%d"))
+
+#k1516 <- Final_data[!(Final_data$year == "2014" | Final_data$year == "2017" | Final_data$year == "2018" | Final_data$year == "2019"),]
+
+#k1819 <- Final_data[!(Final_data$year == "2014" | Final_data$year == "2015" | Final_data$year == "2016" | Final_data$year == "2017"),]
+
+#daily average in March, April, May
+Conclusion1 <- Final_data %>%
+  group_by(Date) %>%
+  summarise(Average_by_day_and_year = mean(as.numeric(as.character(`Turbidity(NTU)`))))
+Conclusion1K <- Conclusion1%>%
+  mutate(watershed="Karurumo(C)")
+```
+#exclude outliers
+```{r}
+Conclusion1K <- na.omit(Conclusion1K)
+Q1 <- quantile(Conclusion1K$Average_by_day_and_year, .25)
+Q3 <- quantile(Conclusion1K$Average_by_day_and_year, .75)
+IQR <- IQR(Conclusion1K$Average_by_day_and_year)
+
+Conclusion1K <- subset(Conclusion1K, Conclusion1K$Average_by_day_and_year> (Q1 - 1.5*IQR) & Conclusion1K$Average_by_day_and_year< (Q3 + 1.5*IQR))
+```
+#heatmap
+```{r}
+Conclusion1K <- Conclusion1K %>%
+  mutate(as.POSIXct(strptime(Conclusion1K$Date, "%Y-%m-%d")))
+
+names(Conclusion1K)[2] <- 'Turbidity'
+names(Conclusion1K)[4] <- 'DDate'
+
+hdata <- Conclusion1K %>% mutate(
+  week = isoweek(Conclusion1K$DDate),
+  wday = wday(Conclusion1K$DDate)-1,
+  year = year(Conclusion1K$DDate))
+
+ggplot(hdata, aes(week, wday, fill = Turbidity)) +
+  geom_tile(color = "white") +
+  facet_wrap(~ year, ncol = 1) +
+  scale_fill_gradientn(colours = c("#B5E384","#FFFFBD","#FFAE63","#D61818")) +
+  scale_x_continuous(name = "Week of the Year", breaks = 1:52, labels = 1:52) +
+  labs(subtitle = "Change in Turbidity in Karurumo", y = "Day of week") +
+  theme(axis.text = element_text(size = 5), axis.title = element_text(size = 8, face = "bold"))
+```
+
+# All date G - Turbidity
+```{r}
+#load file and clean data
+githam <- read_csv("G_WQ.csv")
+
+#separate day, month, year into different columns 
+gDate_date <- githam 
+
+gDate_date$Date <- as.Date(gDate_date$`Date sampled`,format="%d/%y/%y") 
+
+gFinal_data <- gDate_date %>%
+  mutate(date=format(Date, "%d"),month = format(Date, "%m"), year = format(Date, "%Y"),Date_md=format(Date,"%m/%d"))
+
+#g1516 <- gFinal_data[!(gFinal_data$year == "2014" | gFinal_data$year == "2017" | gFinal_data$year == "2018" | gFinal_data$year == "2019"),]
+
+#g1819 <- gFinal_data[!(gFinal_data$year == "2014" | gFinal_data$year == "2015" | gFinal_data$year == "2016" | gFinal_data$year == "2017"),]
+
+#daily average in March, April, May
+Conclusion1 <- gFinal_data %>%
+  group_by(Date) %>%
+  summarise(Average_by_day_and_year = mean(as.numeric(as.character(`Turbidity (NTU)`))))
+Conclusion1G <- Conclusion1%>%
+  mutate(watershed="Githambara(T)")
+```
+#plot
+```{r}
+Conclusion_final=rbind(Conclusion1K,Conclusion1G)
+```
+```{r}
+p <- ggplot(data=Conclusion_final,aes(x=Date,y=Average_by_day_and_year,color=watershed))+
+  geom_line()+
+  labs(title="Turbidity change in Karurumo and Githambara",
+       caption="Source:IBM") +
+  #scale_x_date(date_breaks= "1 year",date_labels="%Y/%m/%d")+
+  #theme(axis.text = element_text(size=8,angle=90))+
+  ylab("Average Turbidity(NTU)")+
+  xlab("Date")
+p
+```
+#exclude outliers
+```{r}
+Conclusion1G <- na.omit(Conclusion1G)
+Q1 <- quantile(Conclusion1G$Average_by_day_and_year, .25)
+Q3 <- quantile(Conclusion1G$Average_by_day_and_year, .75)
+IQR <- IQR(Conclusion1G$Average_by_day_and_year)
+
+Conclusion1G <- subset(Conclusion1G, Conclusion1G$Average_by_day_and_year> (Q1 - 1.5*IQR) & Conclusion1G$Average_by_day_and_year< (Q3 + 1.5*IQR))
+```
+#heatmap
+```{r}
+Conclusion1G <- Conclusion1G %>%
+  mutate(as.POSIXct(strptime(Conclusion1G$Date, "%Y-%m-%d")))
+
+names(Conclusion1G)[2] <- 'Turbidity'
+names(Conclusion1G)[4] <- 'DDate'
+
+
+hdata <- Conclusion1G %>% mutate(
+  week = isoweek(Conclusion1G$DDate),
+  wday = wday(Conclusion1G$DDate)-1,
+  year = year(Conclusion1G$DDate))
+
+ggplot(hdata, aes(week, wday, fill = Turbidity)) +
+  geom_tile(color = "white") +
+  facet_wrap(~ year, ncol = 1) +
+  scale_fill_gradientn(colours = c( "#D61818","#FFAE63","#FFFFBD","#B5E384")) +
+  scale_x_continuous(name = "Week of the Year", breaks = 1:52, labels = 1:52) +
+  labs(subtitle = "Change in Turbidity in Githambara", y = "Day of week") +
+  theme(axis.text = element_text(size = 5), axis.title = element_text(size = 8, face = "bold"))
+```
+
+# individual plots 1K and 1G
+```{r}
+g3 <- ggplot(data=Conclusion1K,aes(x=Date,y=Turbidity))+
+  geom_point()+
+  labs(title="Turbidity change in Githambara",
+       caption="Source:IBM") +
+  #scale_x_date(date_breaks= "1 year",date_labels="%Y/%m/%d")+
+  #theme(axis.text = element_text(size=8,angle=90))+
+  ylab("Average Turbidity (NTU)")+
+  xlab("Date")
+g3
+```
+
+```{r}
+pg3 <- ggplotly(
+  p = g3,
+  width = NULL,
+  height = NULL,
+  tooltip = "all",
+  dynamicTicks = FALSE,
+  layerData = 1,
+  originalData = TRUE,
+  source = "A",
+)
+pg3
+```

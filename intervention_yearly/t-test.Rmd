@@ -1,0 +1,73 @@
+---
+title: "t-test"
+output: html_document
+---
+
+#hypothesis: water level is the same
+# if p-value is small, there is a significant difference between the two datasets 
+
+```{r}
+#2015
+# p-value: 2.2e-16 
+t.test(gdaymean2015$Average, kdaymean2015$Average)
+
+#2016
+#p-value: 2.2e-16 
+t.test(gdaymean2016$Average, kdaymean2016$Average)
+
+#2017 - too little data
+# p-value: 2.2e-16 
+t.test(gdaymean2017$Average, kdaymean2017$Average)
+
+wilcox.test(gdaymean2017$Average, kdaymean2017$Average)
+
+#2018
+# p-value: 2.2e-16 
+t.test(gdaymean2018$Average,kdaymean2018$Average)
+
+#2019
+# p-value: 0.09147
+t.test(kdaymean2019$Average, gdaymean2019$Average)
+
+#2020 - too little data
+#p-value = 3.553e-14
+t.test(kdaymean2020$Average, gdaymean2020$Average)
+
+wilcox.test(gdaymean2020$Average, kdaymean2020$Average)
+```
+
+```{r}
+# G - 2015 & 2019
+t.test(gdaymean2015$Average, gdaymean2019$Average)
+
+# K - 2015 & 2019
+t.test(kdaymean2015$Average, kdaymean2019$Average)
+
+```
+
+```{r}
+kg_mean <- read_csv("kg_mean.csv")
+kg_clean <- kg_mean[!(kg_mean$Year == "2020"),]
+kg <- ggplot(data=kg_clean,aes(x=Year,y=Average,color=watershed))+
+  geom_point()+
+  geom_line()+
+  #labs(title="Annual average water level change in Githambara and Karurumo", caption="Source:IBM") +
+  ylab("Water level(m)")+
+  xlab("year")
+
+```
+
+```{r}
+gka <- ggplotly(
+  p = kg,
+  width = NULL,
+  height = NULL,
+  tooltip = "all",
+  dynamicTicks = FALSE,
+  layerData = 1,
+  originalData = TRUE,
+  source = "A",
+)
+gka
+```
+

@@ -1,0 +1,97 @@
+---
+title: "year - MT"
+output: html_document
+---
+
+```{r }
+library(readr) 
+library(dplyr) 
+library(tidyr) 
+library(lubridate) 
+library(tibble)
+library(ggplot2)
+library(gridExtra)
+library(ggthemes)
+library(gridExtra)
+```
+## Years -M - water level
+```{r}
+#load file and clean data
+mbo <- read_csv("M_WL.csv")
+RawData <- mbo[1:3]
+
+#separate day, month, year into different columns 
+Date_date <- RawData 
+
+Date_date$Date <- as.Date(Date_date$`Date Time, GMT+03:00`,format="%m/%d/%y") 
+
+Final_data <- Date_date %>%
+  mutate(date=format(Date, "%d"),month = format(Date, "%m"), year = format(Date, "%Y"),Date_md=format(Date,"%m/%d"))
+```
+
+```{r}
+#daily average in March, April, May
+Conclusion1 <- Final_data %>%
+  group_by(Date_md,year) %>%
+  summarise(Average_by_day_and_year = mean(as.numeric(as.character(`Water Level (m)`))))%>%
+  ungroup()%>%
+  mutate(Date_md=as.Date(Date_md, format="%m/%d"))
+
+#Conclusion1$Date_md = as.Date(Conclusion1$Date_md , format="%m/%d")
+```
+
+```{r}
+#Conclusion1$md <- paste(Conclusion1$month, Conclusion1$date,sep = "/")
+#Conclusion2 <- Conclusion1
+```
+```{r}
+p <- ggplot(data=Conclusion1,aes(x=Date_md,y=Average_by_day_and_year,color=year))+
+  geom_line()+
+  labs(title="Water level change in Mbogiti(T)",
+       caption="Source:IBM") +
+  scale_x_date(date_breaks= "2 weeks",date_labels="%m/%d")+
+  theme(axis.text = element_text(size=8,angle=90))+
+  ylab("Average Water Level(m)")+
+  xlab("date")
+p
+```
+
+## Years - T-water level
+```{r}
+#load file and clean data
+#load file and clean data
+T <- read_csv("T_WL.csv")
+RawData <- T[1:3]
+
+#separate day, month, year into different columns 
+Date_date <- RawData 
+
+Date_date$Date <- as.Date(Date_date$`Date Time, GMT+03:00`,format="%m/%d/%y") #%Y/%m/%d
+
+Final_data <- Date_date %>%
+  mutate(date=format(Date, "%d"),month = format(Date, "%m"), year = format(Date, "%Y"),Date_md=format(Date,"%m/%d"))
+```
+
+```{r}
+#daily average in March, April, May
+Conclusion1 <- Final_data %>%
+  group_by(Date_md,year) %>%
+  summarise(Average_by_day_and_year = mean(as.numeric(as.character(`Water Level (m)`))))%>%
+  ungroup()%>%
+  mutate(Date_md=as.Date(Date_md, format="%m/%d"))
+```
+```{r}
+#Conclusion1$md <- paste(Conclusion1$month, Conclusion1$date,sep = "/")
+#Conclusion2 <- Conclusion1
+```
+```{r}
+p <- ggplot(data=Conclusion1,aes(x=Date_md,y=Average_by_day_and_year,color=year))+
+  geom_line()+
+  labs(title="Water level change in Thika-Valley(C)",
+       caption="Source:IBM") +
+  scale_x_date(date_breaks= "2 weeks",date_labels="%m/%d")+
+  theme(axis.text = element_text(size=8,angle=90))+
+  ylab("Average Water Level(m)")+
+  xlab("date")
+p
+```
